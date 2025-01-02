@@ -117,46 +117,6 @@ class PickerViewController: UIViewController {
         selectionCountLabel.text = "\(selectedAssets.count) \(item) Selected"
     }
     
-//    private func prepareMediaAssets(from selectedAssets: [PHAsset], completion: @escaping ([MediaAsset]) -> Void) {
-//        var mediaAssets: [MediaAsset] = []
-//        let dispatchGroup = DispatchGroup()
-//        
-//        for asset in selectedAssets {
-//            dispatchGroup.enter()
-//            
-//            let options = PHImageRequestOptions()
-//            options.isSynchronous = false
-//            options.deliveryMode = .highQualityFormat
-//            options.resizeMode = .exact
-//            
-//            if asset.mediaType == .image {
-//                // Fetch image data
-//                PHImageManager.default().requestImageDataAndOrientation(for: asset, options: options) { data, _, _, info in
-//                    let fileName = self.getFileName(from: asset)
-//                    let mediaAsset = MediaAsset(fileName: fileName, data: data, url: nil, mediaType: .image)
-//                    mediaAssets.append(mediaAsset)
-//                    dispatchGroup.leave()
-//                }
-//            } else if asset.mediaType == .video {
-//                // Fetch video URL
-//                PHCachingImageManager().requestAVAsset(forVideo: asset, options: nil) { avAsset, _, _ in
-//                    if let urlAsset = avAsset as? AVURLAsset {
-//                        let fileName = self.getFileName(from: asset)
-//                        let mediaAsset = MediaAsset(fileName: fileName, data: nil, url: urlAsset.url, mediaType: .video)
-//                        mediaAssets.append(mediaAsset)
-//                    }
-//                    dispatchGroup.leave()
-//                }
-//            } else {
-//                dispatchGroup.leave()
-//            }
-//        }
-//        
-//        dispatchGroup.notify(queue: .main) {
-//            completion(mediaAssets)
-//        }
-//    }
-    
     private func getFileName(from asset: PHAsset) -> String {
         let resources = PHAssetResource.assetResources(for: asset)
         return resources.first?.originalFilename ?? "unknown"
@@ -194,7 +154,6 @@ extension PickerViewController: UICollectionViewDelegate, UICollectionViewDataSo
             }
         }
         
-        // Check if the asset is a video and update the label
         if asset.mediaType == .video {
             let duration = Int(asset.duration)
             let minutes = duration / 60
@@ -207,7 +166,7 @@ extension PickerViewController: UICollectionViewDelegate, UICollectionViewDataSo
             cell.durationLabel.isHidden = true
         }
         
-        // Highlight the cell if selected
+        // Highlight the cell
         if selectedAssets.contains(asset) {
             cell.layer.borderWidth = 2
             cell.layer.borderColor = UIColor.systemYellow.cgColor

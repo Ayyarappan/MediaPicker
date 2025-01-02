@@ -81,7 +81,6 @@
 			children = (
 				40D74B422D2658A50004B774 /* Cells */,
 				40D74B3F2D2656880004B774 /* Resource */,
-				40D74B3E2D26567D0004B774 /* ViewModel */,
 				40D74B3D2D2656770004B774 /* View */,
 			);
 			path = PickerModule;
@@ -93,13 +92,6 @@
 				40D74B3A2D2656640004B774 /* PickerViewController.swift */,
 			);
 			path = View;
-			sourceTree = "<group>";
-		};
-		40D74B3E2D26567D0004B774 /* ViewModel */ = {
-			isa = PBXGroup;
-			children = (
-			);
-			path = ViewModel;
 			sourceTree = "<group>";
 		};
 		40D74B3F2D2656880004B774 /* Resource */ = {

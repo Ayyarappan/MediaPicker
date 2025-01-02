@@ -47,10 +47,7 @@ class ViewController: UIViewController {
             }
             
             DispatchQueue.main.async {
-                // Create an AVPlayer instance
                 let player = AVPlayer(playerItem: AVPlayerItem(asset: avAsset))
-                
-                // Create an AVPlayerViewController and present it
                 let playerViewController = AVPlayerViewController()
                 playerViewController.player = player
                 self.present(playerViewController, animated: true) {
@@ -60,14 +57,13 @@ class ViewController: UIViewController {
         }
     }
     
-    // MARK: - Helper Methods
+    // MARK: - Helper function
     private func getAssetThumbnail(for asset: PHAsset, targetSize: CGSize, completion: @escaping (UIImage?) -> Void) {
         let options = PHImageRequestOptions()
         options.isSynchronous = false
         options.deliveryMode = .highQualityFormat
         options.resizeMode = .exact
         
-        // Ensure the target size accounts for screen scale (e.g., Retina display)
         let scaledTargetSize = CGSize(width: targetSize.width * UIScreen.main.scale,
                                       height: targetSize.height * UIScreen.main.scale)
         
@@ -121,7 +117,6 @@ extension ViewController: UICollectionViewDelegate, UICollectionViewDataSource, 
             }
         }
         
-        // Check if the asset is a video and update the label
         if asset.mediaType == .video {
             let duration = Int(asset.duration)
             let minutes = duration / 60
@@ -161,4 +156,5 @@ extension ViewController: UICollectionViewDelegate, UICollectionViewDataSource, 
     func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, insetForSectionAt section: Int) -> UIEdgeInsets {
         return UIEdgeInsets(top: 4, left: 4, bottom: 4, right: 4)
     }
+    
 }
