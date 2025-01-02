@@ -1,0 +1,138 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="3.0" toolsVersion="32700.99.1234" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" useSafeAreas="YES" colorMatched="YES">
+    <device id="retina6_12" orientation="portrait" appearance="light"/>
+    <dependencies>
+        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="22685"/>
+        <capability name="Named colors" minToolsVersion="9.0"/>
+        <capability name="Safe area layout guides" minToolsVersion="9.0"/>
+        <capability name="System colors in document resources" minToolsVersion="11.0"/>
+        <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
+    </dependencies>
+    <scenes>
+        <!--Picker View Controller-->
+        <scene sceneID="s0d-6b-0kx">
+            <objects>
+                <viewController storyboardIdentifier="PickerViewController" id="Y6W-OH-hqX" customClass="PickerViewController" customModule="MediaPicker" customModuleProvider="target" sceneMemberID="viewController">
+                    <view key="view" contentMode="scaleToFill" id="5EZ-qb-Rvc">
+                        <rect key="frame" x="0.0" y="0.0" width="393" height="852"/>
+                        <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                        <subviews>
+                            <view clipsSubviews="YES" contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="DGW-tz-ybv" userLabel="TopView">
+                                <rect key="frame" x="0.0" y="59" width="393" height="60"/>
+                                <subviews>
+                                    <label opaque="NO" clipsSubviews="YES" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="  Recents  " textAlignment="center" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="fHz-cN-h8u">
+                                        <rect key="frame" x="155" y="17.666666666666671" width="83" height="24.666666666666671"/>
+                                        <fontDescription key="fontDescription" name="AvenirNext-Medium" family="Avenir Next" pointSize="18"/>
+                                        <color key="textColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+                                        <nil key="highlightedColor"/>
+                                    </label>
+                                </subviews>
+                                <color key="backgroundColor" red="0.070588235294117646" green="0.094117647058823528" blue="0.14509803921568626" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+                                <constraints>
+                                    <constraint firstAttribute="height" constant="60" id="1iS-dA-g3e"/>
+                                    <constraint firstItem="fHz-cN-h8u" firstAttribute="centerX" secondItem="DGW-tz-ybv" secondAttribute="centerX" id="4ia-VM-S9E"/>
+                                    <constraint firstItem="fHz-cN-h8u" firstAttribute="centerY" secondItem="DGW-tz-ybv" secondAttribute="centerY" id="bRh-xD-Tx7"/>
+                                </constraints>
+                            </view>
+                            <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="hpa-aB-BO1" userLabel="BottomView">
+                                <rect key="frame" x="0.0" y="748" width="393" height="70"/>
+                                <subviews>
+                                    <label opaque="NO" clipsSubviews="YES" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Label" textAlignment="center" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="bRA-uU-i4M">
+                                        <rect key="frame" x="173.66666666666666" y="22.666666666666629" width="45.666666666666657" height="24.666666666666671"/>
+                                        <fontDescription key="fontDescription" name="AvenirNext-Medium" family="Avenir Next" pointSize="18"/>
+                                        <color key="textColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+                                        <nil key="highlightedColor"/>
+                                    </label>
+                                    <button opaque="NO" clipsSubviews="YES" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="E8v-44-2e9" userLabel="AddButton">
+                                        <rect key="frame" x="309" y="18" width="72" height="34"/>
+                                        <color key="backgroundColor" systemColor="systemYellowColor"/>
+                                        <fontDescription key="fontDescription" name="AvenirNext-DemiBold" family="Avenir Next" pointSize="16"/>
+                                        <inset key="imageEdgeInsets" minX="0.0" minY="0.0" maxX="2.2250738585072014e-308" maxY="0.0"/>
+                                        <state key="normal" title="     Add     ">
+                                            <color key="titleColor" red="0.086274509799999996" green="0.1176470588" blue="0.1843137255" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+                                        </state>
+                                        <userDefinedRuntimeAttributes>
+                                            <userDefinedRuntimeAttribute type="number" keyPath="layer.cornerRadius">
+                                                <integer key="value" value="4"/>
+                                            </userDefinedRuntimeAttribute>
+                                        </userDefinedRuntimeAttributes>
+                                        <connections>
+                                            <action selector="didClickAddButton:" destination="Y6W-OH-hqX" eventType="touchUpInside" id="jTQ-aG-t9k"/>
+                                        </connections>
+                                    </button>
+                                    <button opaque="NO" clipsSubviews="YES" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="gCQ-WG-aHA" userLabel="CancelButton">
+                                        <rect key="frame" x="12" y="18" width="75" height="34"/>
+                                        <fontDescription key="fontDescription" name="AvenirNext-DemiBold" family="Avenir Next" pointSize="16"/>
+                                        <inset key="imageEdgeInsets" minX="0.0" minY="0.0" maxX="2.2250738585072014e-308" maxY="0.0"/>
+                                        <state key="normal" title="   Cancel   ">
+                                            <color key="titleColor" name="AccentColor"/>
+                                        </state>
+                                        <connections>
+                                            <action selector="didClickCancel:" destination="Y6W-OH-hqX" eventType="touchUpInside" id="dsT-XD-gKC"/>
+                                        </connections>
+                                    </button>
+                                </subviews>
+                                <color key="backgroundColor" red="0.070588235294117646" green="0.094117647058823528" blue="0.14509803921568626" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+                                <constraints>
+                                    <constraint firstAttribute="height" constant="70" id="5U7-QE-1Ni"/>
+                                    <constraint firstAttribute="trailing" secondItem="E8v-44-2e9" secondAttribute="trailing" constant="12" id="dBV-sA-EfJ"/>
+                                    <constraint firstItem="bRA-uU-i4M" firstAttribute="centerX" secondItem="hpa-aB-BO1" secondAttribute="centerX" id="e1t-x9-WiW"/>
+                                    <constraint firstItem="gCQ-WG-aHA" firstAttribute="leading" secondItem="hpa-aB-BO1" secondAttribute="leading" constant="12" id="idd-el-fc2"/>
+                                    <constraint firstItem="E8v-44-2e9" firstAttribute="centerY" secondItem="hpa-aB-BO1" secondAttribute="centerY" id="mbh-9y-c11"/>
+                                    <constraint firstItem="gCQ-WG-aHA" firstAttribute="centerY" secondItem="hpa-aB-BO1" secondAttribute="centerY" id="vNJ-v9-Isz"/>
+                                    <constraint firstItem="bRA-uU-i4M" firstAttribute="centerY" secondItem="hpa-aB-BO1" secondAttribute="centerY" id="vaw-3L-rXh"/>
+                                </constraints>
+                            </view>
+                            <collectionView clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="scaleToFill" contentInsetAdjustmentBehavior="never" dataMode="prototypes" translatesAutoresizingMaskIntoConstraints="NO" id="o6E-bH-bug">
+                                <rect key="frame" x="0.0" y="119" width="393" height="629"/>
+                                <color key="backgroundColor" systemColor="systemBackgroundColor"/>
+                                <collectionViewFlowLayout key="collectionViewLayout" minimumLineSpacing="5" minimumInteritemSpacing="5" id="4Of-rB-Nc8">
+                                    <size key="itemSize" width="128" height="128"/>
+                                    <size key="headerReferenceSize" width="0.0" height="0.0"/>
+                                    <size key="footerReferenceSize" width="0.0" height="0.0"/>
+                                    <inset key="sectionInset" minX="0.0" minY="0.0" maxX="0.0" maxY="0.0"/>
+                                </collectionViewFlowLayout>
+                                <cells/>
+                            </collectionView>
+                        </subviews>
+                        <viewLayoutGuide key="safeArea" id="vDu-zF-Fre"/>
+                        <color key="backgroundColor" red="0.11764705882352941" green="0.14117647058823529" blue="0.18823529411764706" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+                        <constraints>
+                            <constraint firstItem="o6E-bH-bug" firstAttribute="top" secondItem="DGW-tz-ybv" secondAttribute="bottom" id="9Ge-3Y-6cf"/>
+                            <constraint firstItem="vDu-zF-Fre" firstAttribute="bottom" secondItem="hpa-aB-BO1" secondAttribute="bottom" id="Ge7-ok-V9o"/>
+                            <constraint firstItem="o6E-bH-bug" firstAttribute="leading" secondItem="vDu-zF-Fre" secondAttribute="leading" id="Gy7-WB-YeV"/>
+                            <constraint firstItem="DGW-tz-ybv" firstAttribute="leading" secondItem="vDu-zF-Fre" secondAttribute="leading" id="L2g-Td-W44"/>
+                            <constraint firstItem="hpa-aB-BO1" firstAttribute="top" secondItem="o6E-bH-bug" secondAttribute="bottom" id="L7r-7k-Hxv"/>
+                            <constraint firstItem="hpa-aB-BO1" firstAttribute="leading" secondItem="vDu-zF-Fre" secondAttribute="leading" id="R6D-si-d7T"/>
+                            <constraint firstItem="DGW-tz-ybv" firstAttribute="top" secondItem="vDu-zF-Fre" secondAttribute="top" id="USg-kd-9ua"/>
+                            <constraint firstItem="vDu-zF-Fre" firstAttribute="trailing" secondItem="o6E-bH-bug" secondAttribute="trailing" id="Xmo-vc-x5u"/>
+                            <constraint firstItem="vDu-zF-Fre" firstAttribute="trailing" secondItem="hpa-aB-BO1" secondAttribute="trailing" id="cQ6-Mc-o1N"/>
+                            <constraint firstItem="vDu-zF-Fre" firstAttribute="trailing" secondItem="DGW-tz-ybv" secondAttribute="trailing" id="giH-6H-dBk"/>
+                        </constraints>
+                    </view>
+                    <nil key="simulatedTopBarMetrics"/>
+                    <connections>
+                        <outlet property="addButton" destination="E8v-44-2e9" id="OA6-Pn-4gW"/>
+                        <outlet property="bottomView" destination="hpa-aB-BO1" id="XT3-mK-mLi"/>
+                        <outlet property="mediaCollectionView" destination="o6E-bH-bug" id="V4t-gL-g37"/>
+                        <outlet property="selectionCountLabel" destination="bRA-uU-i4M" id="se5-aK-G1u"/>
+                        <outlet property="topView" destination="DGW-tz-ybv" id="rgH-s2-lqn"/>
+                    </connections>
+                </viewController>
+                <placeholder placeholderIdentifier="IBFirstResponder" id="Ief-a0-LHa" userLabel="First Responder" customClass="UIResponder" sceneMemberID="firstResponder"/>
+            </objects>
+            <point key="canvasLocation" x="76" y="4"/>
+        </scene>
+    </scenes>
+    <resources>
+        <namedColor name="AccentColor">
+            <color red="0.0" green="0.46000000000000002" blue="0.89000000000000001" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+        </namedColor>
+        <systemColor name="systemBackgroundColor">
+            <color white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+        </systemColor>
+        <systemColor name="systemYellowColor">
+            <color red="1" green="0.80000000000000004" blue="0.0" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+        </systemColor>
+    </resources>
+</document>
