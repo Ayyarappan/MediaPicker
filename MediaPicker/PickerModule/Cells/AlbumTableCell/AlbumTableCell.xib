@@ -16,24 +16,54 @@
                 <autoresizingMask key="autoresizingMask"/>
                 <subviews>
                     <label opaque="NO" clipsSubviews="YES" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="photo library" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="q9G-du-zDC">
-                        <rect key="frame" x="15" y="17.333333333333329" width="358" height="24.666666666666671"/>
+                        <rect key="frame" x="14.999999999999986" y="17.333333333333329" width="232.66666666666663" height="24.666666666666671"/>
                         <color key="backgroundColor" white="0.0" alpha="0.0" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                         <fontDescription key="fontDescription" name="AvenirNext-Medium" family="Avenir Next" pointSize="18"/>
                         <color key="textColor" red="1" green="1" blue="1" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
                         <nil key="highlightedColor"/>
                     </label>
+                    <stackView opaque="NO" contentMode="scaleToFill" spacing="8" translatesAutoresizingMaskIntoConstraints="NO" id="SZN-Z3-xO3">
+                        <rect key="frame" x="303" y="23.666666666666668" width="70" height="12.000000000000004"/>
+                        <subviews>
+                            <label opaque="NO" clipsSubviews="YES" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="" textAlignment="right" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="Ng3-A5-Avc">
+                                <rect key="frame" x="0.0" y="0.0" width="50" height="12"/>
+                                <constraints>
+                                    <constraint firstAttribute="width" relation="lessThanOrEqual" constant="100" id="REs-pp-B5e"/>
+                                </constraints>
+                                <fontDescription key="fontDescription" name="AvenirNext-Regular" family="Avenir Next" pointSize="15"/>
+                                <color key="textColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+                                <nil key="highlightedColor"/>
+                            </label>
+                            <imageView clipsSubviews="YES" userInteractionEnabled="NO" contentMode="scaleAspectFit" horizontalHuggingPriority="251" verticalHuggingPriority="251" image="Right" translatesAutoresizingMaskIntoConstraints="NO" id="TXK-zi-tJF">
+                                <rect key="frame" x="58" y="0.0" width="12" height="12"/>
+                                <constraints>
+                                    <constraint firstAttribute="width" constant="12" id="9lg-gQ-srR"/>
+                                    <constraint firstAttribute="height" constant="12" id="zhv-vT-LJW"/>
+                                </constraints>
+                            </imageView>
+                        </subviews>
+                        <constraints>
+                            <constraint firstAttribute="width" relation="lessThanOrEqual" constant="100" id="ArR-aZ-IKs"/>
+                        </constraints>
+                    </stackView>
                 </subviews>
                 <constraints>
-                    <constraint firstAttribute="trailing" secondItem="q9G-du-zDC" secondAttribute="trailing" constant="15" id="RTm-Y1-W8w"/>
+                    <constraint firstItem="q9G-du-zDC" firstAttribute="width" secondItem="pLr-cm-C8o" secondAttribute="width" multiplier="0.6" id="QLd-w7-dKJ"/>
+                    <constraint firstAttribute="trailing" secondItem="SZN-Z3-xO3" secondAttribute="trailing" constant="15" id="cAH-gA-tAk"/>
+                    <constraint firstItem="SZN-Z3-xO3" firstAttribute="centerY" secondItem="pLr-cm-C8o" secondAttribute="centerY" id="elN-jZ-cpt"/>
                     <constraint firstItem="q9G-du-zDC" firstAttribute="leading" secondItem="pLr-cm-C8o" secondAttribute="leading" constant="15" id="kdU-Iz-ma8"/>
                     <constraint firstItem="q9G-du-zDC" firstAttribute="centerY" secondItem="pLr-cm-C8o" secondAttribute="centerY" id="qyp-RR-KeO"/>
                 </constraints>
             </tableViewCellContentView>
             <color key="backgroundColor" white="0.0" alpha="0.0" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
             <connections>
+                <outlet property="albumCountLabel" destination="Ng3-A5-Avc" id="ilO-Rd-QYB"/>
                 <outlet property="albumLabel" destination="q9G-du-zDC" id="Ac9-x2-HWN"/>
             </connections>
             <point key="canvasLocation" x="129.7709923664122" y="63.732394366197184"/>
         </tableViewCell>
     </objects>
+    <resources>
+        <image name="Right" width="13" height="22"/>
+    </resources>
 </document>

@@ -23,6 +23,7 @@ class PickerViewController: UIViewController {
     @IBOutlet weak var blurView: UIView!
     @IBOutlet weak var albumTableView: UITableView!
     @IBOutlet weak var albumTitleLabel: UILabel!
+    @IBOutlet weak var albumSwitchButton: UIButton!
     
     
     var albums: [PHAssetCollection] = []
@@ -66,7 +67,7 @@ class PickerViewController: UIViewController {
     }
     
     @objc func blurViewTapped() {
-        UIView.animate(withDuration: 0.3, delay: 0.02, options: .curveEaseOut) {
+        UIView.animate(withDuration: 0.3, delay: 0.01, options: .curveEaseOut) {
             self.blurView.isHidden.toggle()
             self.albumTableView.isHidden.toggle()
             self.view.layoutIfNeeded()
@@ -123,19 +124,21 @@ class PickerViewController: UIViewController {
         let fetchOptions = PHFetchOptions()
         fetchOptions.sortDescriptors = [NSSortDescriptor(key: "creationDate", ascending: false)]
         
+        mediaCollectionView.alpha = 0
         selectedAlbum = album
         assets = []
         let fetchResult = PHAsset.fetchAssets(in: album, options: fetchOptions)
         fetchResult.enumerateObjects { asset, _, _ in
             self.assets.append(asset)
         }
-        DispatchQueue.main.async {
-            let text = "\(self.selectedAlbum?.localizedTitle ?? "")"
-            self.albumTitleLabel.text = text
-            UIView.animate(withDuration: 0.3, delay: 0, options: .curveEaseIn) {
-                self.mediaCollectionView.reloadData()
-                self.view.layoutIfNeeded()
-            }
+        
+        let text = "\(self.selectedAlbum?.localizedTitle ?? "")"
+        self.albumTitleLabel.text = text
+        UIView.animate(withDuration: 0.3, delay: 0.01, options: .curveEaseOut) {
+            self.mediaCollectionView.reloadData()
+            self.mediaCollectionView.scrollToItem(at: IndexPath(item: 0, section: 0), at: .top, animated: false)
+            self.mediaCollectionView.alpha = 1
+            self.view.layoutIfNeeded()
         }
     }
     
@@ -153,10 +156,10 @@ class PickerViewController: UIViewController {
         selectionCountLabel.isHidden = true
         addButton.isEnabled = false
         addButton.alpha = 0.5
-        blurView.addBlurEffect()
         
-        blurView.backgroundColor = UIColor.black.withAlphaComponent(0.6)
+        blurView.backgroundColor = UIColor.black.withAlphaComponent(0.4)
         blurView.isHidden = true
+        blurView.addBlurEffect()
         albumTableView.isHidden = true
         
         // permission request
@@ -228,7 +231,7 @@ class PickerViewController: UIViewController {
     }
     
     @IBAction func didClickAlbumToggleButton(_ sender: UIButton) {
-        UIView.animate(withDuration: 0.3, delay: 0.02, options: .curveEaseOut) {
+        UIView.animate(withDuration: 0.3, delay: 0.01, options: .curveEaseOut) {
             self.blurView.isHidden.toggle()
             self.albumTableView.isHidden.toggle()
             self.view.layoutIfNeeded()
@@ -256,13 +259,17 @@ extension PickerViewController: UITableViewDelegate, UITableViewDataSource {
         let cell = tableView.dequeueReusableCell(withIdentifier: "AlbumTableCell", for: indexPath) as! AlbumTableCell
         let album = albums[indexPath.row]
         let count = fetchMediaCount(for: album)
-        cell.albumLabel.text = "\(album.localizedTitle ?? "") \(count)"
+        cell.albumLabel.text = album.localizedTitle ?? ""
+        cell.albumCountLabel.text = "\(count)"
         return cell
     }
     
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
-        albumTableView.isHidden = true
-        blurView.isHidden = true
+        UIView.animate(withDuration: 0.3) {
+            self.albumTableView.isHidden = true
+            self.blurView.isHidden = true
+            self.view.layoutIfNeeded()
+        }
         
         let selectedAlbum = albums[indexPath.row]
         fetchAssets(for: selectedAlbum)

@@ -10,7 +10,8 @@ import UIKit
 class AlbumTableCell: UITableViewCell {
     
     @IBOutlet weak var albumLabel: UILabel!
-
+    @IBOutlet weak var albumCountLabel: UILabel!
+    
     override func awakeFromNib() {
         super.awakeFromNib()
         // Initialization code
