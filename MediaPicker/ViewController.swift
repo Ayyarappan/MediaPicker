@@ -88,8 +88,6 @@ class ViewController: UIViewController {
 
 extension ViewController: MediaPickerDelegate {
     func didSelectMediaAssets(_ mediaAssets: [PHAsset]) {
-        print("assets return count: \(mediaAssets.count)")
-        
         selectedAssets = mediaAssets
         
         DispatchQueue.main.async {
@@ -128,7 +126,6 @@ extension ViewController: UICollectionViewDelegate, UICollectionViewDataSource, 
             cell.videoView.isHidden = true
             cell.durationLabel.isHidden = true
         }
-        
         return cell
     }
     
