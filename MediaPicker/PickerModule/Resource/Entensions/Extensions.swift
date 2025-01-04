@@ -53,7 +53,7 @@ extension UIView {
         }
     }
     
-    func stopInteraction(duration:Double = 2) {
+    func stopInteraction(duration:Double = 0.5) {
         self.isUserInteractionEnabled = false
         DispatchQueue.main.asyncAfter(deadline: .now() + duration) {
             self.isUserInteractionEnabled = true

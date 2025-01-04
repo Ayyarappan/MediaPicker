@@ -12,6 +12,7 @@ class PickerCollectionViewCell: UICollectionViewCell {
     @IBOutlet weak var imgView: UIImageView!
     @IBOutlet weak var durationLabel: UILabel!
     @IBOutlet weak var videoView: UIView!
+    @IBOutlet weak var spinner: UIActivityIndicatorView!
     
     private var selectionLabel: UILabel!
     
@@ -29,12 +30,14 @@ class PickerCollectionViewCell: UICollectionViewCell {
     
     private func setupSelectionLabel() {
         selectionLabel = UILabel(frame: CGRect(x: contentView.bounds.width - 32, y: 5, width: 26, height: 26))
-        selectionLabel.backgroundColor = #colorLiteral(red: 0.9411764741, green: 0.4980392158, blue: 0.3529411852, alpha: 1)
+        selectionLabel.backgroundColor = #colorLiteral(red: 1, green: 0, blue: 0, alpha: 1)
         selectionLabel.textColor = .white
         selectionLabel.font = .boldSystemFont(ofSize: 15)
         selectionLabel.textAlignment = .center
         selectionLabel.layer.cornerRadius = 13
         selectionLabel.layer.masksToBounds = true
+        selectionLabel.layer.borderWidth = 1
+        selectionLabel.layer.borderColor = UIColor.white.cgColor
         contentView.addSubview(selectionLabel)
         contentView.bringSubviewToFront(selectionLabel)
         selectionLabel.isHidden = true

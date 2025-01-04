@@ -64,13 +64,19 @@
                             <constraint firstItem="MiI-JD-Jjh" firstAttribute="centerY" secondItem="hJI-WF-fVH" secondAttribute="centerY" id="lwd-a6-7Rc"/>
                         </constraints>
                     </view>
+                    <activityIndicatorView hidden="YES" opaque="NO" contentMode="scaleToFill" horizontalHuggingPriority="750" verticalHuggingPriority="750" hidesWhenStopped="YES" style="medium" translatesAutoresizingMaskIntoConstraints="NO" id="Jbj-8G-4RG">
+                        <rect key="frame" x="80" y="80" width="20" height="20"/>
+                        <color key="color" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+                    </activityIndicatorView>
                 </subviews>
                 <constraints>
                     <constraint firstItem="hJI-WF-fVH" firstAttribute="leading" secondItem="cZI-pL-UFV" secondAttribute="leading" id="0hb-Po-LnJ"/>
                     <constraint firstItem="cZI-pL-UFV" firstAttribute="centerY" secondItem="AR6-MH-6Zf" secondAttribute="centerY" id="193-q7-K4V"/>
                     <constraint firstItem="cZI-pL-UFV" firstAttribute="centerX" secondItem="AR6-MH-6Zf" secondAttribute="centerX" id="1ye-qW-rme"/>
                     <constraint firstItem="hJI-WF-fVH" firstAttribute="height" secondItem="cZI-pL-UFV" secondAttribute="height" multiplier="0.2" id="JS7-ou-Zvd"/>
+                    <constraint firstItem="Jbj-8G-4RG" firstAttribute="centerY" secondItem="AR6-MH-6Zf" secondAttribute="centerY" id="OfL-QC-FbA"/>
                     <constraint firstItem="hJI-WF-fVH" firstAttribute="trailing" secondItem="cZI-pL-UFV" secondAttribute="trailing" id="SQb-R5-Xhk"/>
+                    <constraint firstItem="Jbj-8G-4RG" firstAttribute="centerX" secondItem="AR6-MH-6Zf" secondAttribute="centerX" id="mvU-Xu-2FE"/>
                     <constraint firstItem="cZI-pL-UFV" firstAttribute="width" secondItem="AR6-MH-6Zf" secondAttribute="width" id="ouq-5Q-PYq"/>
                     <constraint firstAttribute="bottom" secondItem="hJI-WF-fVH" secondAttribute="bottom" id="tZR-jT-yvS"/>
                 </constraints>
@@ -80,6 +86,7 @@
             <connections>
                 <outlet property="durationLabel" destination="Kqm-vM-IkM" id="JWw-FR-otU"/>
                 <outlet property="imgView" destination="cZI-pL-UFV" id="RDf-Ga-cS9"/>
+                <outlet property="spinner" destination="Jbj-8G-4RG" id="pLz-E9-pjR"/>
                 <outlet property="videoView" destination="hJI-WF-fVH" id="TjV-Ug-4DM"/>
             </connections>
             <point key="canvasLocation" x="225.95419847328245" y="60.563380281690144"/>

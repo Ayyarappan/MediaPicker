@@ -24,6 +24,7 @@ class PickerViewController: UIViewController {
     @IBOutlet weak var albumTableView: UITableView!
     @IBOutlet weak var albumTitleLabel: UILabel!
     @IBOutlet weak var albumSwitchButton: UIButton!
+    @IBOutlet weak var dateRangeLabel: UILabel!
     
     
     var albums: [PHAssetCollection] = []
@@ -32,11 +33,9 @@ class PickerViewController: UIViewController {
     var selectedAssets: [PHAsset] = [] {
         didSet {
             if selectedAssets.isEmpty {
-                selectionCountLabel.isHidden = true
                 addButton.isEnabled = false
                 addButton.alpha = 0.5
             } else {
-                selectionCountLabel.isHidden = false
                 addButton.isEnabled = true
                 addButton.alpha = 1
             }
@@ -122,6 +121,7 @@ class PickerViewController: UIViewController {
         guard let album = album else { return }
         
         let fetchOptions = PHFetchOptions()
+        fetchOptions.includeAssetSourceTypes = [.typeCloudShared, .typeUserLibrary]
         fetchOptions.sortDescriptors = [NSSortDescriptor(key: "creationDate", ascending: false)]
         
         mediaCollectionView.alpha = 0
@@ -132,13 +132,16 @@ class PickerViewController: UIViewController {
             self.assets.append(asset)
         }
         
-        let text = "\(self.selectedAlbum?.localizedTitle ?? "")"
-        self.albumTitleLabel.text = text
-        UIView.animate(withDuration: 0.3, delay: 0.01, options: .curveEaseOut) {
-            self.mediaCollectionView.reloadData()
-            self.mediaCollectionView.scrollToItem(at: IndexPath(item: 0, section: 0), at: .top, animated: false)
-            self.mediaCollectionView.alpha = 1
-            self.view.layoutIfNeeded()
+        DispatchQueue.main.async {
+            let text = "\(self.selectedAlbum?.localizedTitle ?? "")"
+            self.albumTitleLabel.text = text
+            UIView.animate(withDuration: 0.3, delay: 0.02, options: .curveEaseOut) {
+                self.mediaCollectionView.reloadData()
+                guard !self.assets.isEmpty else {return}
+                self.mediaCollectionView.scrollToItem(at: IndexPath(item: 0, section: 0), at: .top, animated: false)
+                self.mediaCollectionView.alpha = 1
+                self.view.layoutIfNeeded()
+            }
         }
     }
     
@@ -147,13 +150,14 @@ class PickerViewController: UIViewController {
         mediaCollectionView.register(collectionNib, forCellWithReuseIdentifier: "PickerCollectionViewCell")
         mediaCollectionView.delegate = self
         mediaCollectionView.dataSource = self
+        mediaCollectionView.contentInset = UIEdgeInsets(top: 35, left: 0, bottom: 0, right: 0)
+        mediaCollectionView.scrollIndicatorInsets = mediaCollectionView.contentInset
         
         let tableNib = UINib(nibName: "AlbumTableCell", bundle: nil)
         albumTableView.register(tableNib, forCellReuseIdentifier: "AlbumTableCell")
         albumTableView.delegate = self
         albumTableView.dataSource = self
         
-        selectionCountLabel.isHidden = true
         addButton.isEnabled = false
         addButton.alpha = 0.5
         
@@ -164,7 +168,9 @@ class PickerViewController: UIViewController {
         
         // permission request
         requestPhotoLibraryAccess { [weak self] authorized in
-            guard authorized, let self = self else { return }
+            guard authorized, let self = self else {
+                return
+            }
             
             self.fetchAlbums()
             
@@ -181,10 +187,47 @@ class PickerViewController: UIViewController {
     }
     
     private func requestPhotoLibraryAccess(completion: @escaping (Bool) -> Void) {
-        PHPhotoLibrary.requestAuthorization { status in
+        PHPhotoLibrary.requestAuthorization(for: .readWrite) { status in
             DispatchQueue.main.async {
-                completion(status == .authorized || status == .limited)
+                switch status {
+                case .authorized, .limited:
+                    completion(true)
+                case .denied, .restricted:
+                    self.prsentSettingsRedirection()
+                    completion(false)
+                case .notDetermined:
+                    completion(false)
+                @unknown default:
+                    completion(false)
+                }
             }
+        }
+    }
+    
+    private func prsentSettingsRedirection() {
+        let alert = UIAlertController(
+            title: "Photo Library Access Denied",
+            message: "To select photos, please allow access to the Photo Library in Settings.",
+            preferredStyle: .alert
+        )
+        alert.addAction(UIAlertAction(title: "Cancel", style: .cancel, handler: { _ in
+            alert.dismiss(animated: true)
+        }))
+        alert.addAction(UIAlertAction(title: "Open Settings", style: .default, handler: { _ in
+            if let settingsURL = URL(string: UIApplication.openSettingsURLString),
+               UIApplication.shared.canOpenURL(settingsURL) {
+                UIApplication.shared.open(settingsURL)
+            }
+        }))
+        
+        if let windowScene = UIApplication.shared.connectedScenes.first(where: { $0.activationState == .foregroundActive }) as? UIWindowScene , let rootViewController = windowScene.windows.first(where: { $0.isKeyWindow })?.rootViewController {
+            
+            var topController = rootViewController
+            while let presentedController = topController.presentedViewController {
+                topController = presentedController
+            }
+            
+            topController.present(alert, animated: true, completion: nil)
         }
     }
     
@@ -205,9 +248,18 @@ class PickerViewController: UIViewController {
     
     private func getAssetThumbnail(for asset: PHAsset, targetSize: CGSize, completion: @escaping (UIImage?) -> Void) {
         let options = PHImageRequestOptions()
+        options.isNetworkAccessAllowed = true // Allow fetching from iCloud
         options.isSynchronous = false
         options.deliveryMode = .highQualityFormat
         options.resizeMode = .exact
+        options.progressHandler = { progress, error, _, _ in
+            if let error = error {
+                print("Error downloading cloud item: \(error.localizedDescription)")
+                return
+            }
+//            print("Download progress: \(progress)")
+            // Update UI with progress
+        }
         
         let scaledTargetSize = CGSize(width: targetSize.width * UIScreen.main.scale,
                                       height: targetSize.height * UIScreen.main.scale)
@@ -221,8 +273,12 @@ class PickerViewController: UIViewController {
     }
     
     private func updateSelectedCountLabel() {
-        let item = selectedAssets.count > 1 ? "Items" : "Item"
-        selectionCountLabel.text = "\(selectedAssets.count) \(item) Selected"
+        if selectedAssets.isEmpty {
+            selectionCountLabel.text = "Select Items"
+        } else {
+            let item = selectedAssets.count > 1 ? "Items" : "Item"
+            selectionCountLabel.text = "\(selectedAssets.count) \(item) Selected"
+        }
     }
     
     private func getFileName(from asset: PHAsset) -> String {
@@ -230,7 +286,48 @@ class PickerViewController: UIViewController {
         return resources.first?.originalFilename ?? "unknown"
     }
     
+    func scrollViewDidScroll(_ scrollView: UIScrollView) {
+        guard scrollView == mediaCollectionView else {return}
+        guard !assets.isEmpty else {return}
+        updateDateRange()
+    }
+
+    private func updateDateRange() {
+        guard !assets.isEmpty, let visibleIndexPaths = mediaCollectionView?.indexPathsForVisibleItems, !visibleIndexPaths.isEmpty else {
+            dateRangeLabel.text = ""
+            return
+        }
+        let sortedIndexPaths = visibleIndexPaths.sorted()
+        
+        guard let firstVisibleIndex = sortedIndexPaths.first?.item,
+                  let lastVisibleIndex = sortedIndexPaths.last?.item,
+                  firstVisibleIndex < assets.count,
+                  lastVisibleIndex < assets.count else {
+            dateRangeLabel.text = ""
+            return
+        }
+            
+        let firstAsset = assets[firstVisibleIndex]
+        let lastAsset = assets[lastVisibleIndex]
+        
+        let dateFormatter = DateFormatter()
+        dateFormatter.dateFormat = "dd MMM yy"
+        
+        let startDate = firstAsset.creationDate ?? Date()
+        let endDate = lastAsset.creationDate ?? Date()
+        
+        let startDateString = dateFormatter.string(from: startDate)
+        let endDateString = dateFormatter.string(from: endDate)
+        
+        let dateRangeText = startDateString == endDateString
+        ? startDateString
+        : "\(startDateString) - \(endDateString)"
+        
+        dateRangeLabel.text = dateRangeText
+    }
+    
     @IBAction func didClickAlbumToggleButton(_ sender: UIButton) {
+        sender.stopInteraction()
         UIView.animate(withDuration: 0.3, delay: 0.01, options: .curveEaseOut) {
             self.blurView.isHidden.toggle()
             self.albumTableView.isHidden.toggle()
@@ -273,6 +370,11 @@ extension PickerViewController: UITableViewDelegate, UITableViewDataSource {
         
         let selectedAlbum = albums[indexPath.row]
         fetchAssets(for: selectedAlbum)
+        dateRangeLabel.text = ""
+    }
+    
+    func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat {
+        return UITableView.automaticDimension
     }
 }
 
@@ -290,9 +392,17 @@ extension PickerViewController: UICollectionViewDelegate, UICollectionViewDataSo
         let cellSize = (collectionView.bounds.width - 8) / 3 // Three columns, minus spacing
         let targetSize = CGSize(width: cellSize, height: cellSize)
         
-        getAssetThumbnail(for: asset, targetSize: targetSize) { image in
-            DispatchQueue.main.async {
+        if asset.sourceType == .typeCloudShared {
+            cell.spinner.startAnimating()
+            getAssetThumbnail(for: asset, targetSize: targetSize) { image in
+                cell.spinner.stopAnimating()
                 cell.imgView.image = image
+            }
+        } else {
+            getAssetThumbnail(for: asset, targetSize: targetSize) { image in
+                DispatchQueue.main.async {
+                    cell.imgView.image = image
+                }
             }
         }
         
