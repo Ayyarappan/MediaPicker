@@ -44,6 +44,7 @@ class PickerViewController: UIViewController {
     var selectedAlbum: PHAssetCollection? // Currently selected album
     
     weak var delegate: MediaPickerDelegate?
+    var isFetchMore: Bool = false
     
     
     // collection view cell item
@@ -123,6 +124,7 @@ class PickerViewController: UIViewController {
         let fetchOptions = PHFetchOptions()
         fetchOptions.includeAssetSourceTypes = [.typeCloudShared, .typeUserLibrary]
         fetchOptions.sortDescriptors = [NSSortDescriptor(key: "creationDate", ascending: false)]
+        fetchOptions.fetchLimit = 100
         
         mediaCollectionView.alpha = 0
         selectedAlbum = album
@@ -140,6 +142,51 @@ class PickerViewController: UIViewController {
                 guard !self.assets.isEmpty else {return}
                 self.mediaCollectionView.scrollToItem(at: IndexPath(item: 0, section: 0), at: .top, animated: false)
                 self.mediaCollectionView.alpha = 1
+                self.view.layoutIfNeeded()
+            }
+        }
+    }
+    
+    private func fetchMore(for album: PHAssetCollection?) {
+        guard let album = album else { return }
+        guard !isFetchMore else { return }
+
+        isFetchMore = true
+
+        let fetchOptions = PHFetchOptions()
+        fetchOptions.includeAssetSourceTypes = [.typeCloudShared, .typeUserLibrary]
+        fetchOptions.sortDescriptors = [NSSortDescriptor(key: "creationDate", ascending: false)]
+        fetchOptions.fetchLimit = self.assets.count + 100
+
+        let fetchResult = PHAsset.fetchAssets(in: album, options: fetchOptions)
+
+        guard fetchResult.count > self.assets.count else {
+            self.isFetchMore = false
+            return
+        }
+
+        let newAssetsCount = fetchResult.count - self.assets.count
+        let startIndex = self.assets.count
+        let endIndex = startIndex + newAssetsCount - 1
+
+//        print("startIndex: \(startIndex), endIndex: \(endIndex)")
+
+        var newAssets = [PHAsset]()
+        for index in startIndex..<fetchResult.count {
+            newAssets.append(fetchResult.object(at: index))
+        }
+
+        let indexPaths = (startIndex..<fetchResult.count).map { IndexPath(item: $0, section: 0) }
+
+        self.assets.append(contentsOf: newAssets)
+//        print("self.assets: \(self.assets.count)")
+
+        DispatchQueue.main.async {
+            UIView.animate(withDuration: 0.3, delay: 0.02, options: .curveEaseOut) {
+                self.mediaCollectionView.performBatchUpdates {
+                    self.mediaCollectionView.insertItems(at: indexPaths)
+                }
+                self.isFetchMore = false
                 self.view.layoutIfNeeded()
             }
         }
@@ -281,14 +328,24 @@ class PickerViewController: UIViewController {
         }
     }
     
-    private func getFileName(from asset: PHAsset) -> String {
-        let resources = PHAssetResource.assetResources(for: asset)
-        return resources.first?.originalFilename ?? "unknown"
-    }
+    // Not in use
+//    private func getFileName(from asset: PHAsset) -> String {
+//        let resources = PHAssetResource.assetResources(for: asset)
+//        return resources.first?.originalFilename ?? "unknown"
+//    }
     
     func scrollViewDidScroll(_ scrollView: UIScrollView) {
         guard scrollView == mediaCollectionView else {return}
         guard !assets.isEmpty else {return}
+        
+        let offsetY = scrollView.contentOffset.y
+        let contentHeight = scrollView.contentSize.height
+        let frameHeight = scrollView.frame.size.height
+
+        if offsetY > contentHeight - frameHeight - 20 {
+            fetchMore(for: selectedAlbum)
+        }
+        
         updateDateRange()
     }
 
