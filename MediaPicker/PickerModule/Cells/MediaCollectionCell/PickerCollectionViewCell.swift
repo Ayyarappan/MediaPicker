@@ -14,7 +14,7 @@ class PickerCollectionViewCell: UICollectionViewCell {
     @IBOutlet weak var videoView: UIView!
     @IBOutlet weak var spinner: UIActivityIndicatorView!
     
-    private var selectionLabel: UILabel!
+    var selectionLabel: UILabel!
     
     override func awakeFromNib() {
         super.awakeFromNib()
@@ -30,13 +30,13 @@ class PickerCollectionViewCell: UICollectionViewCell {
     
     private func setupSelectionLabel() {
         selectionLabel = UILabel(frame: CGRect(x: contentView.bounds.width - 32, y: 5, width: 26, height: 26))
-        selectionLabel.backgroundColor = #colorLiteral(red: 1, green: 0, blue: 0, alpha: 1)
+        selectionLabel.backgroundColor = #colorLiteral(red: 0, green: 0.5019607843, blue: 0, alpha: 1)
         selectionLabel.textColor = .white
         selectionLabel.font = .boldSystemFont(ofSize: 15)
         selectionLabel.textAlignment = .center
         selectionLabel.layer.cornerRadius = 13
         selectionLabel.layer.masksToBounds = true
-        selectionLabel.layer.borderWidth = 1
+        selectionLabel.layer.borderWidth = 1.5
         selectionLabel.layer.borderColor = UIColor.white.cgColor
         contentView.addSubview(selectionLabel)
         contentView.bringSubviewToFront(selectionLabel)
