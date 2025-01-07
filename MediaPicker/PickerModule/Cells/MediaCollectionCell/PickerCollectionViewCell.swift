@@ -32,7 +32,7 @@ class PickerCollectionViewCell: UICollectionViewCell {
         selectionLabel = UILabel(frame: CGRect(x: contentView.bounds.width - 32, y: 5, width: 26, height: 26))
         selectionLabel.backgroundColor = #colorLiteral(red: 0, green: 0.5019607843, blue: 0, alpha: 1)
         selectionLabel.textColor = .white
-        selectionLabel.font = .boldSystemFont(ofSize: 15)
+        selectionLabel.font = .boldSystemFont(ofSize: 14)
         selectionLabel.textAlignment = .center
         selectionLabel.layer.cornerRadius = 13
         selectionLabel.layer.masksToBounds = true

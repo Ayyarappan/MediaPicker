@@ -13,10 +13,8 @@ protocol MediaPickerDelegate: AnyObject {
     func didSelectMediaAssets(_ mediaAssets: [PHAsset])
 }
 
-@frozen enum SelectionDirection {
-    case none
-    case horizontal
-    case vertical
+private enum ScrollDirection {
+    case up, down
 }
 
 class PickerViewController: UIViewController, UIGestureRecognizerDelegate, UIScrollViewDelegate, UIAdaptivePresentationControllerDelegate {
@@ -47,23 +45,31 @@ class PickerViewController: UIViewController, UIGestureRecognizerDelegate, UIScr
             }
         }
     }
-    var selectedAlbum: PHAssetCollection? // Currently selected album
+    
+    /// Currently selected album
+    var selectedAlbum: PHAssetCollection?
     
     weak var delegate: MediaPickerDelegate?
-    var isFetchMore: Bool = false
     
+    private var isFetchMore: Bool = false
+    private var initialSelectedIndexPath : IndexPath?
     private var currentIndexPaths: Set<IndexPath> = []
-    private var isSelecting: Bool = false
-    private let verticalScrollThreshold: CGFloat = 20
-    private var lastSelectedIndexPath: IndexPath?
-    private let horizontalSelectionThreshold: CGFloat = 15
-    private var selectionDirection: SelectionDirection = .none
+        
+    ///Configurable, Default - 30
+    var maxSelectionLimit: Int = 30
     
-    // collection view cell item
+    /// Configurable, Default - 100
+    /// But not recommended above 1000
+    /// Used for batch limit asset fetch action
+    private let batchSize: Int = 100
+    
+    ///Configurable, Default - 3
     private let numberOfItemsPerRow: CGFloat = 3
     private let minimumInteritemSpacing: CGFloat = 4
     private let minimumLineSpacing: CGFloat = 4
     private let sectionInsets = UIEdgeInsets(top: 4, left: 4, bottom: 4, right: 4)
+    
+    private var edgeScrollTimer: Timer?
 
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -80,30 +86,36 @@ class PickerViewController: UIViewController, UIGestureRecognizerDelegate, UIScr
         blurView.removeBlur()
     }
     
-//    private func handleEdgeScrolling(at location: CGPoint) {
-//        guard let collectionView = mediaCollectionView else { return }
-//        
-//        // Scroll upwards if near the top edge
-//        if location.y < collectionView.contentInset.top + 35 {
-//            collectionView.setContentOffset(CGPoint(x: collectionView.contentOffset.x,
-//                                                    y: max(collectionView.contentOffset.y - 5, 0)),
-//                                            animated: false)
-//        }
-//        
-//        // Scroll downwards if near the bottom edge
-//        if location.y > collectionView.frame.height - 35 {
-//            collectionView.setContentOffset(CGPoint(x: collectionView.contentOffset.x,
-//                                                    y: min(collectionView.contentOffset.y + 5,
-//                                                           collectionView.contentSize.height - collectionView.frame.height)),
-//                                            animated: false)
-//        }
-//    }
-    
-    @objc func blurViewTapped() {
-        UIView.animate(withDuration: 0.3, delay: 0.01, options: .curveEaseOut) {
-            self.blurView.isHidden.toggle()
-            self.albumTableView.isHidden.toggle()
-            self.view.layoutIfNeeded()
+    private func setupView() {
+        let collectionNib = UINib(nibName: "PickerCollectionViewCell", bundle: nil)
+        mediaCollectionView.register(collectionNib, forCellWithReuseIdentifier: "PickerCollectionViewCell")
+        mediaCollectionView.delegate = self
+        mediaCollectionView.dataSource = self
+        mediaCollectionView.contentInset = UIEdgeInsets(top: 35, left: 0, bottom: 0, right: 0)
+        mediaCollectionView.scrollIndicatorInsets = mediaCollectionView.contentInset
+        
+        let tableNib = UINib(nibName: "AlbumTableCell", bundle: nil)
+        albumTableView.register(tableNib, forCellReuseIdentifier: "AlbumTableCell")
+        albumTableView.delegate = self
+        albumTableView.dataSource = self
+        
+        addButton.isEnabled = false
+        addButton.alpha = 0.5
+        
+        blurView.backgroundColor = UIColor.black.withAlphaComponent(0.4)
+        blurView.isHidden = true
+        blurView.addBlurEffect()
+        albumTableView.isHidden = true
+        
+        // permission request
+        requestPhotoLibraryAccess { [weak self] authorized in
+            guard authorized, let self = self else {
+                return
+            }
+            
+            self.fetchAlbums()
+            
+            self.fetchAssets(for: albums.first)
         }
     }
     
@@ -116,110 +128,164 @@ class PickerViewController: UIViewController, UIGestureRecognizerDelegate, UIScr
         mediaCollectionView.addGestureRecognizer(panGesture)
     }
     
+    @objc func blurViewTapped() {
+        UIView.animate(withDuration: 0.3, delay: 0.01, options: .curveEaseOut) {
+            self.blurView.isHidden.toggle()
+            self.albumTableView.isHidden.toggle()
+            self.view.layoutIfNeeded()
+        }
+    }
 
     @objc private func handlePanSelection(_ gesture: UIPanGestureRecognizer) {
         let location = gesture.location(in: mediaCollectionView)
-        let translation = gesture.translation(in: mediaCollectionView)
+        let velocity = gesture.velocity(in: mediaCollectionView)
         
         switch gesture.state {
         case .began:
-            resetGestureState()
+            initialSelectedIndexPath = mediaCollectionView.indexPathForItem(at: location)
             currentIndexPaths.removeAll()
-        
-        case .changed:
-            if selectionDirection == .none {
-                if abs(translation.x) > horizontalSelectionThreshold && abs(translation.x) > abs(translation.y) {
-                    selectionDirection = .horizontal
-                    isSelecting = true
-                    mediaCollectionView.isScrollEnabled = false
-                } else if abs(translation.y) > verticalScrollThreshold {
-                    selectionDirection = .vertical
-                }
-            }
 
-            if selectionDirection == .horizontal, isSelecting, let indexPath = mediaCollectionView.indexPathForItem(at: location) {
-                if lastSelectedIndexPath != indexPath {
-                    toggleSelection(at: indexPath)
-                    lastSelectedIndexPath = indexPath
-                }
+        case .changed:
+            if abs(velocity.y) > abs(velocity.x) {
+                return
             }
+            
+            guard let currentIndexPath = mediaCollectionView.indexPathForItem(at: location) else { return }
+            if let startIndexPath = initialSelectedIndexPath {
+                selectAssetsBetween(start: startIndexPath, end: currentIndexPath)
+            }
+            
+            handleEdgeScrolling(for: gesture)
 
         case .ended, .cancelled, .failed:
             resetGestureState()
-            mediaCollectionView.isScrollEnabled = true
 
         default:
             break
         }
     }
     
-    private func resetGestureState() {
-        isSelecting = false
-        selectionDirection = .none
-        lastSelectedIndexPath = nil
-    }
     
-    private func toggleSelection(at indexPath: IndexPath) {
-        guard indexPath.item < assets.count else { return }
-        let asset = assets[indexPath.item]
+    private func selectAssetsBetween(start: IndexPath, end: IndexPath) {
+        let startItem = min(start.item, end.item)
+        let endItem = max(start.item, end.item)
 
-        if let existingIndex = selectedAssets.firstIndex(of: asset) {
-            selectedAssets.remove(at: existingIndex)
-            currentIndexPaths.remove(indexPath)
-            
-            updateSelectionNumbers()
-        } else {
-            selectedAssets.append(asset)
-            currentIndexPaths.insert(indexPath)
-            
-            if let newIndex = selectedAssets.firstIndex(of: asset),
-               let cell = mediaCollectionView.cellForItem(at: indexPath) as? PickerCollectionViewCell {
-                cell.selectionLabel.text = "\(newIndex + 1)"
+        for item in startItem...endItem {
+            let indexPath = IndexPath(item: item, section: start.section)
+            let asset = assets[indexPath.item]
+
+            if !currentIndexPaths.contains(indexPath) {
+                currentIndexPaths.insert(indexPath)
+                if let index = selectedAssets.firstIndex(of: asset) {
+                    selectedAssets.remove(at: index)
+                } else {
+                    guard selectedAssets.count < maxSelectionLimit else {
+                        showMaxSelectionAlert()
+                        return
+                    }
+                    
+                    selectedAssets.append(asset)
+                }
+
+                if let cell = mediaCollectionView.cellForItem(at: indexPath) as? PickerCollectionViewCell {
+                    updateCellSelection(cell, isSelected: selectedAssets.contains(asset))
+                }
             }
         }
-
-        if let cell = mediaCollectionView.cellForItem(at: indexPath) as? PickerCollectionViewCell {
-            updateCellSelection(cell, isSelected: selectedAssets.contains(asset))
-        }
-        
         updateSelectedCountLabel()
     }
     
-    private func updateSelectionNumbers() {
-        for (index, asset) in selectedAssets.enumerated() {
-            if let indexPath = indexPath(for: asset),
-               let cell = mediaCollectionView.cellForItem(at: indexPath) as? PickerCollectionViewCell {
-                cell.selectionLabel.text = "\(index + 1)"
+    private func handleEdgeScrolling(for gesture: UIPanGestureRecognizer) {
+        guard let collectionView = mediaCollectionView else { return }
+
+        let location = gesture.location(in: collectionView)
+        let scrollBounds = collectionView.bounds
+        let scrollVelocity: CGFloat = 10.0 // Adjust for smoother(10) or faster(50) edge scrolling
+
+        if gesture.state == .ended || gesture.state == .cancelled || gesture.state == .failed {
+            edgeScrollTimer?.invalidate()
+            edgeScrollTimer = nil
+            return
+        }
+
+        if location.y <= scrollBounds.minY + 50 {
+            // Near top: Scroll up
+            if collectionView.contentOffset.y > 0 {
+                startEdgeScrolling(direction: .up, velocity: scrollVelocity)
             }
+        } else if location.y >= scrollBounds.maxY - 50 {
+            // Near bottom: Scroll down
+            if collectionView.contentOffset.y < collectionView.contentSize.height - scrollBounds.height {
+                startEdgeScrolling(direction: .down, velocity: scrollVelocity)
+            }
+        } else {
+            edgeScrollTimer?.invalidate()
+            edgeScrollTimer = nil
         }
     }
-    
-    private func indexPath(for asset: PHAsset) -> IndexPath? {
-        if let index = assets.firstIndex(of: asset) {
-            return IndexPath(item: index, section: 0)
+
+    private func startEdgeScrolling(direction: ScrollDirection, velocity: CGFloat) {
+        guard edgeScrollTimer == nil else { return }
+
+        edgeScrollTimer = Timer.scheduledTimer(withTimeInterval: 0.03, repeats: true) { [weak self] _ in
+            guard let self = self else { return }
+            guard let collectionView = self.mediaCollectionView else { return }
+
+            let currentOffset = collectionView.contentOffset
+            var newOffset = currentOffset
+
+            switch direction {
+            case .up:
+                newOffset.y = max(currentOffset.y - velocity, 0)
+            case .down:
+                let maxOffsetY = collectionView.contentSize.height - collectionView.bounds.height
+                newOffset.y = min(currentOffset.y + velocity, maxOffsetY)
+            }
+
+            collectionView.setContentOffset(newOffset, animated: false)
+            updateSelectedCountLabel()
         }
-        return nil
+    }
+
+    private func stopEdgeScrolling() {
+        edgeScrollTimer?.invalidate()
+        edgeScrollTimer = nil
+    }
+    
+    private func resetGestureState() {
+        initialSelectedIndexPath = nil
+        currentIndexPaths.removeAll()
+        stopEdgeScrolling()
     }
 
     private func updateCellSelection(_ cell: PickerCollectionViewCell, isSelected: Bool) {
         cell.selectionLabel.isHidden = !isSelected
         cell.selectionLabel.text = isSelected ? "\(selectedAssets.count)" : ""
     }
-
-    // MARK: - UIGestureRecognizerDelegate
-    func gestureRecognizer(_ gestureRecognizer: UIGestureRecognizer, shouldRecognizeSimultaneouslyWith otherGestureRecognizer: UIGestureRecognizer) -> Bool {
-        if let _ = gestureRecognizer as? UIPanGestureRecognizer, selectionDirection == .horizontal || selectionDirection == .vertical {
-            return false
+    
+    private func showMaxSelectionAlert() {
+        showAlert(with: "Can't select more than \(maxSelectionLimit) items.") {
+            //
         }
-        return true
     }
-
-    func gestureRecognizerShouldBegin(_ gestureRecognizer: UIGestureRecognizer) -> Bool {
-        if let panGesture = gestureRecognizer as? UIPanGestureRecognizer {
-            let velocity = panGesture.velocity(in: mediaCollectionView)
-            return abs(velocity.x) > abs(velocity.y)
+    
+    
+    private func requestPhotoLibraryAccess(completion: @escaping (Bool) -> Void) {
+        PHPhotoLibrary.requestAuthorization(for: .readWrite) { status in
+            DispatchQueue.main.async {
+                switch status {
+                case .authorized, .limited:
+                    completion(true)
+                case .denied, .restricted:
+                    self.presentSettingsRedirection()
+                    completion(false)
+                case .notDetermined:
+                    completion(false)
+                @unknown default:
+                    completion(false)
+                }
+            }
         }
-        return true
     }
     
     private func fetchAlbums() {
@@ -270,13 +336,14 @@ class PickerViewController: UIViewController, UIGestureRecognizerDelegate, UIScr
         guard let album = album else { return }
         
         let fetchOptions = PHFetchOptions()
-        fetchOptions.includeAssetSourceTypes = [.typeCloudShared, .typeUserLibrary]
+        fetchOptions.includeAssetSourceTypes = [.typeUserLibrary, .typeCloudShared]
         fetchOptions.sortDescriptors = [NSSortDescriptor(key: "creationDate", ascending: false)]
-        fetchOptions.fetchLimit = 100
+        fetchOptions.fetchLimit = batchSize
         
         mediaCollectionView.alpha = 0
         selectedAlbum = album
         assets = []
+        let twecw = PHAsset.fetchAssets(with: .image, options: fetchOptions)
         let fetchResult = PHAsset.fetchAssets(in: album, options: fetchOptions)
         fetchResult.enumerateObjects { asset, _, _ in
             self.assets.append(asset)
@@ -295,16 +362,16 @@ class PickerViewController: UIViewController, UIGestureRecognizerDelegate, UIScr
         }
     }
     
-    private func fetchMore(for album: PHAssetCollection?) {
+    private func fetchMoreAssets(for album: PHAssetCollection?) {
         guard let album = album else { return }
         guard !isFetchMore else { return }
 
         isFetchMore = true
 
         let fetchOptions = PHFetchOptions()
-        fetchOptions.includeAssetSourceTypes = [.typeCloudShared, .typeUserLibrary]
+        fetchOptions.includeAssetSourceTypes = [.typeUserLibrary, .typeCloudShared]
         fetchOptions.sortDescriptors = [NSSortDescriptor(key: "creationDate", ascending: false)]
-        fetchOptions.fetchLimit = self.assets.count + 100
+        fetchOptions.fetchLimit = self.assets.count + batchSize
 
         let fetchResult = PHAsset.fetchAssets(in: album, options: fetchOptions)
 
@@ -323,7 +390,6 @@ class PickerViewController: UIViewController, UIGestureRecognizerDelegate, UIScr
         let indexPaths = (startIndex..<fetchResult.count).map { IndexPath(item: $0, section: 0) }
 
         self.assets.append(contentsOf: newAssets)
-//        print("self.assets: \(self.assets.count)")
 
         DispatchQueue.main.async {
             UIView.animate(withDuration: 0.3, delay: 0.02, options: .curveEaseOut) {
@@ -336,66 +402,7 @@ class PickerViewController: UIViewController, UIGestureRecognizerDelegate, UIScr
         }
     }
     
-    private func setupView() {
-        let collectionNib = UINib(nibName: "PickerCollectionViewCell", bundle: nil)
-        mediaCollectionView.register(collectionNib, forCellWithReuseIdentifier: "PickerCollectionViewCell")
-        mediaCollectionView.delegate = self
-        mediaCollectionView.dataSource = self
-        mediaCollectionView.contentInset = UIEdgeInsets(top: 35, left: 0, bottom: 0, right: 0)
-        mediaCollectionView.scrollIndicatorInsets = mediaCollectionView.contentInset
-        
-        let tableNib = UINib(nibName: "AlbumTableCell", bundle: nil)
-        albumTableView.register(tableNib, forCellReuseIdentifier: "AlbumTableCell")
-        albumTableView.delegate = self
-        albumTableView.dataSource = self
-        
-        addButton.isEnabled = false
-        addButton.alpha = 0.5
-        
-        blurView.backgroundColor = UIColor.black.withAlphaComponent(0.4)
-        blurView.isHidden = true
-        blurView.addBlurEffect()
-        albumTableView.isHidden = true
-        
-        // permission request
-        requestPhotoLibraryAccess { [weak self] authorized in
-            guard authorized, let self = self else {
-                return
-            }
-            
-            self.fetchAlbums()
-            
-            self.fetchAssets(for: albums.first)
-            
-            // old logic
-//            self.fetchAllMedia { fetchedAssets in
-//                self.assets = fetchedAssets
-//                DispatchQueue.main.async {
-//                    self.mediaCollectionView.reloadData()
-//                }
-//            }
-        }
-    }
-    
-    private func requestPhotoLibraryAccess(completion: @escaping (Bool) -> Void) {
-        PHPhotoLibrary.requestAuthorization(for: .readWrite) { status in
-            DispatchQueue.main.async {
-                switch status {
-                case .authorized, .limited:
-                    completion(true)
-                case .denied, .restricted:
-                    self.prsentSettingsRedirection()
-                    completion(false)
-                case .notDetermined:
-                    completion(false)
-                @unknown default:
-                    completion(false)
-                }
-            }
-        }
-    }
-    
-    private func prsentSettingsRedirection() {
+    private func presentSettingsRedirection() {
         let alert = UIAlertController(
             title: "Photo Library Access Denied",
             message: "To select photos, please allow access to the Photo Library in Settings.",
@@ -470,9 +477,35 @@ class PickerViewController: UIViewController, UIGestureRecognizerDelegate, UIScr
 //    }
     
     
-    func scrollViewWillBeginDragging(_ scrollView: UIScrollView) {
-        isSelecting = false
+    
+    // MARK: - UIGestureRecognizerDelegate
+    func gestureRecognizer(_ gestureRecognizer: UIGestureRecognizer, shouldRecognizeSimultaneouslyWith otherGestureRecognizer: UIGestureRecognizer) -> Bool {
+        guard let panGesture = gestureRecognizer as? UIPanGestureRecognizer else {
+            return true
+        }
+        
+        let velocity = panGesture.velocity(in: mediaCollectionView)
+        if abs(velocity.y) > abs(velocity.x) {
+            return true
+        } else {
+            return false
+        }
     }
+
+    func gestureRecognizerShouldBegin(_ gestureRecognizer: UIGestureRecognizer) -> Bool {
+        guard let panGesture = gestureRecognizer as? UIPanGestureRecognizer else {
+            return true
+        }
+
+        let velocity = panGesture.velocity(in: mediaCollectionView)
+        if abs(velocity.y) > abs(velocity.x) {
+            return true
+        } else if abs(velocity.x) > abs(velocity.y) {
+            return true
+        }
+        return false
+    }
+    
     
     func scrollViewDidScroll(_ scrollView: UIScrollView) {
         guard scrollView == mediaCollectionView else {return}
@@ -483,7 +516,7 @@ class PickerViewController: UIViewController, UIGestureRecognizerDelegate, UIScr
         let frameHeight = scrollView.frame.size.height
 
         if offsetY > contentHeight - frameHeight - 20 {
-            fetchMore(for: selectedAlbum)
+            fetchMoreAssets(for: selectedAlbum)
         }
         
         updateDateRange()
@@ -525,6 +558,7 @@ class PickerViewController: UIViewController, UIGestureRecognizerDelegate, UIScr
     }
     
     @IBAction func didClickAlbumToggleButton(_ sender: UIButton) {
+        triggerHapticFeedback(style: .soft)
         sender.stopInteraction()
         UIView.animate(withDuration: 0.3, delay: 0.01, options: .curveEaseOut) {
             self.blurView.isHidden.toggle()
@@ -534,11 +568,13 @@ class PickerViewController: UIViewController, UIGestureRecognizerDelegate, UIScr
     }
     
     @IBAction func didClickAddButton(_ sender: UIButton) {
+        triggerHapticFeedback(style: .soft)
         self.delegate?.didSelectMediaAssets(selectedAssets)
         self.dismiss(animated: true, completion: nil)
     }
     
     @IBAction func didClickCancel(_ sender: UIButton) {
+        triggerHapticFeedback(style: .soft)
         self.dismiss(animated: true)
     }
 
@@ -565,7 +601,7 @@ extension PickerViewController: UITableViewDelegate, UITableViewDataSource {
             self.blurView.isHidden = true
             self.view.layoutIfNeeded()
         }
-        
+        triggerHapticFeedback(style: .soft)
         let selectedAlbum = albums[indexPath.row]
         fetchAssets(for: selectedAlbum)
         dateRangeLabel.text = ""
@@ -587,7 +623,7 @@ extension PickerViewController: UICollectionViewDelegate, UICollectionViewDataSo
         let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "PickerCollectionViewCell", for: indexPath) as! PickerCollectionViewCell
         let asset = assets[indexPath.item]
         
-        let cellSize = (collectionView.bounds.width - 8) / 3 // Three columns, minus spacing
+        let cellSize = (collectionView.bounds.width - 8) / numberOfItemsPerRow // Three columns, minus spacing
         let targetSize = CGSize(width: cellSize, height: cellSize)
         
         if asset.sourceType == .typeCloudShared {
@@ -621,14 +657,6 @@ extension PickerViewController: UICollectionViewDelegate, UICollectionViewDataSo
         } else {
             cell.hideSelectionNumber()
         }
-        
-//        // Highlight the cell - old logic
-//        if selectedAssets.contains(asset) {
-//            cell.layer.borderWidth = 2
-//            cell.layer.borderColor = UIColor.systemYellow.cgColor
-//        } else {
-//            cell.layer.borderWidth = 0
-//        }
         return cell
     }
     
@@ -651,23 +679,18 @@ extension PickerViewController: UICollectionViewDelegate, UICollectionViewDataSo
                 }
             }
         } else {
+            
+            guard selectedAssets.count < maxSelectionLimit else {
+                triggerHapticFeedback(style: .soft)
+                showMaxSelectionAlert()
+                return
+            }
+            
             selectedAssets.append(asset)
 
             let selectedIndexPath = IndexPath(item: indexPath.item, section: 0)
             collectionView.reloadItems(at: [selectedIndexPath])
         }
-        
-        
-//        if let index = selectedAssets.firstIndex(of: selectedAsset) {
-//            selectedAssets.remove(at: index)
-//        } else {
-////            guard selectedAssets.count < 5 else {
-////                showMaxSelectionAlert()
-////                return
-////            }
-//            selectedAssets.append(selectedAsset)
-//        }
-//        collectionView.reloadData()
         updateSelectedCountLabel()
     }
     
