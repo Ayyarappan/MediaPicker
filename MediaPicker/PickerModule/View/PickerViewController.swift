@@ -29,6 +29,7 @@ class PickerViewController: UIViewController, UIGestureRecognizerDelegate, UIScr
     @IBOutlet weak var albumTitleLabel: UILabel!
     @IBOutlet weak var albumSwitchButton: UIButton!
     @IBOutlet weak var dateRangeLabel: UILabel!
+    @IBOutlet weak var bottomBlurView: UIView!
     
     
     var albums: [PHAssetCollection] = []
@@ -106,6 +107,8 @@ class PickerViewController: UIViewController, UIGestureRecognizerDelegate, UIScr
         blurView.isHidden = true
         blurView.addBlurEffect()
         albumTableView.isHidden = true
+        
+        bottomBlurView.addBlurEffect()
         
         // permission request
         requestPhotoLibraryAccess { [weak self] authorized in
