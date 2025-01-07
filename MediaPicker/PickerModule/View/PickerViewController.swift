@@ -192,6 +192,8 @@ class PickerViewController: UIViewController, UIGestureRecognizerDelegate, UIScr
                 }
             }
         }
+        
+        refreshVisibleCells()
         updateSelectedCountLabel()
     }
     
@@ -257,10 +259,30 @@ class PickerViewController: UIViewController, UIGestureRecognizerDelegate, UIScr
         currentIndexPaths.removeAll()
         stopEdgeScrolling()
     }
+    
+    private func refreshVisibleCells() {
+        let visibleIndexPaths = mediaCollectionView.indexPathsForVisibleItems
+
+        for indexPath in visibleIndexPaths {
+            if let cell = mediaCollectionView.cellForItem(at: indexPath) as? PickerCollectionViewCell {
+                let asset = assets[indexPath.item]
+                updateCellSelection(cell, isSelected: selectedAssets.contains(asset))
+            }
+        }
+    }
 
     private func updateCellSelection(_ cell: PickerCollectionViewCell, isSelected: Bool) {
-        cell.selectionLabel.isHidden = !isSelected
-        cell.selectionLabel.text = isSelected ? "\(selectedAssets.count)" : ""
+        guard let asset = cell.asset else { return }
+
+        if isSelected {
+            if let index = selectedAssets.firstIndex(of: asset) {
+                cell.selectionLabel.isHidden = false
+                cell.selectionLabel.text = "\(index + 1)"
+            }
+        } else {
+            cell.selectionLabel.isHidden = true
+            cell.selectionLabel.text = ""
+        }
     }
     
     private func showMaxSelectionAlert() {
@@ -343,7 +365,6 @@ class PickerViewController: UIViewController, UIGestureRecognizerDelegate, UIScr
         mediaCollectionView.alpha = 0
         selectedAlbum = album
         assets = []
-        let twecw = PHAsset.fetchAssets(with: .image, options: fetchOptions)
         let fetchResult = PHAsset.fetchAssets(in: album, options: fetchOptions)
         fetchResult.enumerateObjects { asset, _, _ in
             self.assets.append(asset)
@@ -623,6 +644,7 @@ extension PickerViewController: UICollectionViewDelegate, UICollectionViewDataSo
         let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "PickerCollectionViewCell", for: indexPath) as! PickerCollectionViewCell
         let asset = assets[indexPath.item]
         
+        cell.asset = asset
         let cellSize = (collectionView.bounds.width - 8) / numberOfItemsPerRow // Three columns, minus spacing
         let targetSize = CGSize(width: cellSize, height: cellSize)
         

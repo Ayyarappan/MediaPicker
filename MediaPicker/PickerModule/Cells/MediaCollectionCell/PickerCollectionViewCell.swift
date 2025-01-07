@@ -6,6 +6,7 @@
 //
 
 import UIKit
+import Photos
 
 class PickerCollectionViewCell: UICollectionViewCell {
     
@@ -15,6 +16,7 @@ class PickerCollectionViewCell: UICollectionViewCell {
     @IBOutlet weak var spinner: UIActivityIndicatorView!
     
     var selectionLabel: UILabel!
+    var asset: PHAsset?
     
     override func awakeFromNib() {
         super.awakeFromNib()
