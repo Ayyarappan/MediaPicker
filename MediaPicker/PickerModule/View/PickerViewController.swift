@@ -85,6 +85,7 @@ class PickerViewController: UIViewController, UIGestureRecognizerDelegate, UIScr
     deinit {
         print("\(Self.self) deinited")
         blurView.removeBlur()
+        bottomBlurView.removeBlur()
     }
     
     private func setupView() {
@@ -108,6 +109,7 @@ class PickerViewController: UIViewController, UIGestureRecognizerDelegate, UIScr
         blurView.addBlurEffect()
         albumTableView.isHidden = true
         
+        blurView.backgroundColor = UIColor.black.withAlphaComponent(0.4)
         bottomBlurView.addBlurEffect()
         
         // permission request
@@ -218,7 +220,7 @@ class PickerViewController: UIViewController, UIGestureRecognizerDelegate, UIScr
             if collectionView.contentOffset.y > 0 {
                 startEdgeScrolling(direction: .up, velocity: scrollVelocity)
             }
-        } else if location.y >= scrollBounds.maxY - 50 {
+        } else if location.y >= scrollBounds.maxY - 100 {
             // Near bottom: Scroll down
             if collectionView.contentOffset.y < collectionView.contentSize.height - scrollBounds.height {
                 startEdgeScrolling(direction: .down, velocity: scrollVelocity)
