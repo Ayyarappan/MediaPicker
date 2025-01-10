@@ -30,6 +30,7 @@ class PickerViewController: UIViewController, UIGestureRecognizerDelegate, UIScr
     @IBOutlet weak var albumSwitchButton: UIButton!
     @IBOutlet weak var dateRangeLabel: UILabel!
     @IBOutlet weak var bottomBlurView: UIView!
+    @IBOutlet weak var showSelectedButton: UIButton!
     
     
     var albums: [PHAssetCollection] = []
@@ -490,9 +491,10 @@ class PickerViewController: UIViewController, UIGestureRecognizerDelegate, UIScr
     private func updateSelectedCountLabel() {
         if selectedAssets.isEmpty {
             selectionCountLabel.text = "Select Items"
+            selectionCountLabel.textColor = UIColor.white
         } else {
-            let item = selectedAssets.count > 1 ? "Items" : "Item"
-            selectionCountLabel.text = "\(selectedAssets.count) \(item) Selected"
+            selectionCountLabel.text = "Show Selected (\(selectedAssets.count))"
+            selectionCountLabel.textColor = UIColor.systemYellow
         }
     }
     
@@ -581,6 +583,22 @@ class PickerViewController: UIViewController, UIGestureRecognizerDelegate, UIScr
     
     func presentationControllerDidAttemptToDismiss(_ presentationController: UIPresentationController) {
         // user attempts to dismiss presented controller with default swipe down action
+    }
+    
+    @IBAction func didClickShowSelected(_ sender: UIButton) {
+        let storyBoard: UIStoryboard = UIStoryboard(name: "Picker", bundle: nil)
+        let pickerVC = storyBoard.instantiateViewController(withIdentifier: "MediaPreviewController") as! MediaPreviewController
+        pickerVC.selectedAssets = selectedAssets
+        pickerVC.didUpdateSelectedAssets = {[weak self] assets in
+            guard let self = self else {return}
+            self.selectedAssets = assets
+            
+            DispatchQueue.main.async {
+                self.mediaCollectionView.reloadData()
+                self.updateSelectedCountLabel()
+            }
+        }
+        self.present(pickerVC, animated: true)
     }
     
     @IBAction func didClickAlbumToggleButton(_ sender: UIButton) {

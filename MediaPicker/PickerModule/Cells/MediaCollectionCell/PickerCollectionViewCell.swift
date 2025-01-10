@@ -14,6 +14,7 @@ class PickerCollectionViewCell: UICollectionViewCell {
     @IBOutlet weak var durationLabel: UILabel!
     @IBOutlet weak var videoView: UIView!
     @IBOutlet weak var spinner: UIActivityIndicatorView!
+    @IBOutlet weak var playButton: UIButton!
     
     var selectionLabel: UILabel!
     var asset: PHAsset?
@@ -21,6 +22,7 @@ class PickerCollectionViewCell: UICollectionViewCell {
     override func awakeFromNib() {
         super.awakeFromNib()
         
+        playButton.isHidden = true
         durationLabel.layer.masksToBounds = true
         setupSelectionLabel()
     }

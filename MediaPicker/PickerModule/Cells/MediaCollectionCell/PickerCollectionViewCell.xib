@@ -18,9 +18,6 @@
                 <subviews>
                     <imageView clipsSubviews="YES" userInteractionEnabled="NO" contentMode="scaleAspectFill" horizontalHuggingPriority="251" verticalHuggingPriority="251" translatesAutoresizingMaskIntoConstraints="NO" id="cZI-pL-UFV">
                         <rect key="frame" x="0.0" y="0.0" width="180" height="180"/>
-                        <constraints>
-                            <constraint firstAttribute="width" secondItem="cZI-pL-UFV" secondAttribute="height" multiplier="1:1" id="ToG-Pm-Wa2"/>
-                        </constraints>
                     </imageView>
                     <view clipsSubviews="YES" contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="hJI-WF-fVH">
                         <rect key="frame" x="0.0" y="144" width="180" height="36"/>
@@ -64,6 +61,17 @@
                             <constraint firstItem="MiI-JD-Jjh" firstAttribute="centerY" secondItem="hJI-WF-fVH" secondAttribute="centerY" id="lwd-a6-7Rc"/>
                         </constraints>
                     </view>
+                    <button opaque="NO" clipsSubviews="YES" userInteractionEnabled="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="kN2-rQ-Yfc">
+                        <rect key="frame" x="67.666666666666671" y="67.666666666666671" width="45" height="45"/>
+                        <constraints>
+                            <constraint firstAttribute="height" constant="45" id="4nb-AA-c1u"/>
+                            <constraint firstAttribute="width" constant="45" id="G8F-N8-VIC"/>
+                        </constraints>
+                        <inset key="imageEdgeInsets" minX="0.0" minY="0.0" maxX="2.2250738585072014e-308" maxY="0.0"/>
+                        <state key="normal" image="Media.Play">
+                            <color key="titleColor" white="0.0" alpha="0.0" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+                        </state>
+                    </button>
                     <activityIndicatorView hidden="YES" opaque="NO" contentMode="scaleToFill" horizontalHuggingPriority="750" verticalHuggingPriority="750" hidesWhenStopped="YES" style="medium" translatesAutoresizingMaskIntoConstraints="NO" id="Jbj-8G-4RG">
                         <rect key="frame" x="80" y="80" width="20" height="20"/>
                         <color key="color" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
@@ -73,12 +81,15 @@
                     <constraint firstItem="hJI-WF-fVH" firstAttribute="leading" secondItem="cZI-pL-UFV" secondAttribute="leading" id="0hb-Po-LnJ"/>
                     <constraint firstItem="cZI-pL-UFV" firstAttribute="centerY" secondItem="AR6-MH-6Zf" secondAttribute="centerY" id="193-q7-K4V"/>
                     <constraint firstItem="cZI-pL-UFV" firstAttribute="centerX" secondItem="AR6-MH-6Zf" secondAttribute="centerX" id="1ye-qW-rme"/>
+                    <constraint firstItem="cZI-pL-UFV" firstAttribute="height" secondItem="AR6-MH-6Zf" secondAttribute="height" id="9ik-32-82V"/>
+                    <constraint firstItem="kN2-rQ-Yfc" firstAttribute="centerX" secondItem="AR6-MH-6Zf" secondAttribute="centerX" id="AKn-kt-Hzi"/>
                     <constraint firstItem="hJI-WF-fVH" firstAttribute="height" secondItem="cZI-pL-UFV" secondAttribute="height" multiplier="0.2" id="JS7-ou-Zvd"/>
                     <constraint firstItem="Jbj-8G-4RG" firstAttribute="centerY" secondItem="AR6-MH-6Zf" secondAttribute="centerY" id="OfL-QC-FbA"/>
                     <constraint firstItem="hJI-WF-fVH" firstAttribute="trailing" secondItem="cZI-pL-UFV" secondAttribute="trailing" id="SQb-R5-Xhk"/>
                     <constraint firstItem="Jbj-8G-4RG" firstAttribute="centerX" secondItem="AR6-MH-6Zf" secondAttribute="centerX" id="mvU-Xu-2FE"/>
                     <constraint firstItem="cZI-pL-UFV" firstAttribute="width" secondItem="AR6-MH-6Zf" secondAttribute="width" id="ouq-5Q-PYq"/>
                     <constraint firstAttribute="bottom" secondItem="hJI-WF-fVH" secondAttribute="bottom" id="tZR-jT-yvS"/>
+                    <constraint firstItem="kN2-rQ-Yfc" firstAttribute="centerY" secondItem="AR6-MH-6Zf" secondAttribute="centerY" id="w0i-B2-XM0"/>
                 </constraints>
             </collectionViewCellContentView>
             <color key="backgroundColor" white="0.0" alpha="0.0" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
@@ -86,6 +97,7 @@
             <connections>
                 <outlet property="durationLabel" destination="Kqm-vM-IkM" id="JWw-FR-otU"/>
                 <outlet property="imgView" destination="cZI-pL-UFV" id="RDf-Ga-cS9"/>
+                <outlet property="playButton" destination="kN2-rQ-Yfc" id="1Qa-Uh-kxa"/>
                 <outlet property="spinner" destination="Jbj-8G-4RG" id="pLz-E9-pjR"/>
                 <outlet property="videoView" destination="hJI-WF-fVH" id="TjV-Ug-4DM"/>
             </connections>
@@ -94,6 +106,7 @@
     </objects>
     <resources>
         <image name="BottomTint" width="30" height="30"/>
+        <image name="Media.Play" width="47" height="47"/>
         <image name="VideoIcon" width="30" height="30"/>
     </resources>
 </document>
